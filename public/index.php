@@ -30,4 +30,5 @@ $app->addErrorMiddleware(true, true, true);
 // Підключаємо маршрути
 require __DIR__ . '/../src/routes/post_indexes.php';
 
+
 $app->run();
