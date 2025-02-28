@@ -12,6 +12,7 @@ Frontend працює на Vue.js.
 Для роботи проєкту необхідно мати встановлені:
 - [Docker](https://docs.docker.com/get-docker/)
 - [npm](https://www.npmjs.com/)
+- [Node.js 20.0+](https://nodejs.org/)
 
 ## Встановлення
 
