@@ -109,7 +109,7 @@ class PostIndexImporter
 
         foreach ($rows as $row) {
             // Пропускаємо порожні або неповні рядки
-            if (count(array_filter($row)) < 5 || empty($row[10])) continue;
+            if (count(array_filter($row)) < 5 || empty($row[11])) continue;
 
             // Видаляємо пусті перші стовпці, якщо такі є
             while (empty($row[0]) && count($row) > 1) {

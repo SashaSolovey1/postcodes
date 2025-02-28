@@ -1,14 +1,12 @@
 <template>
-  <div>
+  <div class="list">
     <h1>Поштові індекси</h1>
 
-    <!-- Фільтр -->
     <div class="filters">
       <input v-model="filters.postal_code" placeholder="Фільтр по індексу" @input="updateFilters" />
       <input v-model="filters.settlement" placeholder="Фільтр по населеному пункту" @input="updateFilters" />
     </div>
 
-    <!-- Вибір ліміту записів -->
     <div class="limit-selector">
       <label for="limit">Кількість записів:</label>
       <select id="limit" v-model="limit" @change="updateLimit">
@@ -18,7 +16,6 @@
       </select>
     </div>
 
-    <!-- Таблиця з даними -->
     <table v-if="postIndexes.length">
       <thead>
       <tr>
@@ -26,45 +23,44 @@
         <th>Район (старий)</th>
         <th>Район (новий)</th>
         <th>Населений пункт</th>
-        <th>Поштовий індекс (Postal code)</th>
-        <th>Region (Oblast)</th>
-        <th>District new (Raion new)</th>
+        <th>Поштовий індекс</th>
+        <th>Region</th>
+        <th>District new</th>
         <th>Settlement</th>
-        <th>Вiддiлення зв`язку</th>
+        <th>Вiддiлення</th>
         <th>Post office</th>
-        <th>Поштовий індекс відділення зв`язку (Post code of post office)</th>
+        <th>Індекс відділення</th>
         <th>Дії</th>
       </tr>
       </thead>
       <tbody>
       <tr v-for="index in postIndexes" :key="index.postal_code">
-        <td>{{ index.oblast }}</td>
-        <td>{{ index.old_district }}</td>
-        <td>{{ index.district_new }}</td>
-        <td>{{ index.settlement }}</td>
-        <td>{{ index.postal_code }}</td>
-        <td>{{ index.region }}</td>
-        <td>{{ index.district_new }}</td>
-        <td>{{ index.settlement_eng }}</td>
-        <td>{{ index.post_branch }}</td>
-        <td>{{ index.post_office }}</td>
-        <td>{{ index.post_code_office }}</td>
+        <td :title="index.oblast">{{ index.oblast }}</td>
+        <td :title="index.old_district">{{ index.old_district }}</td>
+        <td :title="index.district_new">{{ index.district_new }}</td>
+        <td :title="index.settlement">{{ index.settlement }}</td>
+        <td :title="index.postal_code">{{ index.postal_code }}</td>
+        <td :title="index.region">{{ index.region }}</td>
+        <td :title="index.district_new">{{ index.district_new }}</td>
+        <td :title="index.settlement_eng">{{ index.settlement_eng }}</td>
+        <td :title="index.post_branch">{{ index.post_branch }}</td>
+        <td :title="index.post_office">{{ index.post_office }}</td>
+        <td :title="index.post_code_office">{{ index.post_code_office }}</td>
         <td>
           <button @click="deleteIndex(index.postal_code)">Видалити</button>
         </td>
       </tr>
       </tbody>
+
     </table>
     <p v-else>Немає даних</p>
 
-    <!-- Пагінація -->
     <div class="pagination" v-if="totalItems > 0">
       <button v-if="page > 1" @click="prevPage">Попередня</button>
       <span>Сторінка {{ page }} з {{ totalPages }}</span>
       <button v-if="hasNextPage" @click="nextPage">Наступна</button>
     </div>
 
-    <!-- Форма додавання запису -->
     <AddPostIndex @index-added="fetchPostIndexes" />
   </div>
 </template>
@@ -84,7 +80,7 @@ export default {
       },
       page: 1,
       limit: 50,
-      totalItems: 0, // Загальна кількість записів
+      totalItems: 0,
     };
   },
   computed: {
@@ -101,7 +97,6 @@ export default {
   methods: {
     async fetchPostIndexes() {
       const params = { ...this.filters, page: this.page, limit: this.limit };
-
       const response = await api.get("/post-indexes", { params });
       this.postIndexes = response.data.items;
       this.totalItems = response.data.total;
@@ -135,6 +130,30 @@ export default {
 </script>
 
 <style scoped>
+.list{
+  width: max-content;
+}
+table {
+  width: fit-content;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  min-width: 160px;
+}
+
+td{
+  white-space: nowrap;
+}
+
 .filters input {
   margin-right: 10px;
   padding: 5px;
@@ -146,18 +165,6 @@ export default {
 
 .limit-selector label {
   margin-right: 10px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
 }
 
 button {
