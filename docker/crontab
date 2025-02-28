@@ -1,0 +1,5 @@
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Запуск імпорту раз в день о 00:00
+0 0 * * * root php /var/www/src/scripts/import.php >> /var/log/cron.log 2>&1

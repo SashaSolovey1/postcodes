@@ -1,0 +1,196 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Postcodes API",
+        "description": "API для роботи з поштовими індексами",
+        "contact": {
+            "name": "Solovei Oleksandr",
+            "email": "solo160103@gmail.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8001",
+            "description": "Local development server"
+        }
+    ],
+    "paths": {
+        "/api/post-indexes": {
+            "get": {
+                "tags": [
+                    "Поштові індекси"
+                ],
+                "summary": "Отримати всі поштові індекси",
+                "description": "Повертає список поштових індексів з підтримкою фільтрації, сортування та пагінації.",
+                "operationId": "f96bb8269d7904a78276f78ae9e1216d",
+                "parameters": [
+                    {
+                        "name": "postal_code",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "settlement",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список поштових індексів",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Поштові індекси"
+                ],
+                "summary": "Додати новий поштовий індекс",
+                "description": "Додає новий запис поштового індексу в базу даних.",
+                "operationId": "1002a10f8287e969900143706dfe7106",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "oblast",
+                                    "settlement",
+                                    "postal_code",
+                                    "region",
+                                    "post_branch",
+                                    "post_office",
+                                    "post_code_office"
+                                ],
+                                "properties": {
+                                    "oblast": {
+                                        "type": "string",
+                                        "example": "Вінницька"
+                                    },
+                                    "old_district": {
+                                        "type": "string",
+                                        "example": "Вінницький"
+                                    },
+                                    "new_district": {
+                                        "type": "string",
+                                        "example": "Вінницький"
+                                    },
+                                    "settlement": {
+                                        "type": "string",
+                                        "example": "Вінниця"
+                                    },
+                                    "postal_code": {
+                                        "type": "string",
+                                        "example": "21004"
+                                    },
+                                    "region": {
+                                        "type": "string",
+                                        "example": "Центральний"
+                                    },
+                                    "district_new": {
+                                        "type": "string",
+                                        "example": "Вінницький район"
+                                    },
+                                    "settlement_eng": {
+                                        "type": "string",
+                                        "example": "Vinnytsia"
+                                    },
+                                    "post_branch": {
+                                        "type": "string",
+                                        "example": "Відділення №4"
+                                    },
+                                    "post_office": {
+                                        "type": "string",
+                                        "example": "Відділення №4"
+                                    },
+                                    "post_code_office": {
+                                        "type": "string",
+                                        "example": "21004-4"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Успішно додано"
+                    },
+                    "400": {
+                        "description": "Невірний запит"
+                    },
+                    "500": {
+                        "description": "Помилка сервера"
+                    }
+                }
+            }
+        },
+        "/api/post-indexes/{postal_code}": {
+            "delete": {
+                "tags": [
+                    "Поштові індекси"
+                ],
+                "summary": "Видалити поштовий індекс",
+                "description": "Видаляє запис поштового індексу за вказаним `postal_code`.",
+                "operationId": "721eef3897e5174d9e028effdbfa927e",
+                "parameters": [
+                    {
+                        "name": "postal_code",
+                        "in": "path",
+                        "description": "Поштовий індекс",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успішно видалено"
+                    },
+                    "404": {
+                        "description": "Поштовий індекс не знайдено"
+                    },
+                    "500": {
+                        "description": "Помилка сервера"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Поштові індекси",
+            "description": "Поштові індекси"
+        }
+    ]
+}
