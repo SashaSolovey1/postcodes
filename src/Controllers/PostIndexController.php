@@ -68,82 +68,135 @@ class PostIndexController
 
 
     /**
-     * Додавання поштових індексів
+     * Додавання поштових індексів (одного або декількох)
      *
      * @param Request $request HTTP-запит з JSON-тілом
      * @param Response $response HTTP-відповідь
      * @return Response Відповідь із результатом операції
      */
 
-
     #[OA\Post(
         path: "/api/post-indexes",
-        summary: "Додати новий поштовий індекс",
-        description: "Додає новий запис поштового індексу в базу даних.",
+        summary: "Додати один або кілька поштових індексів",
+        description: "Додає один або декілька записів поштового індексу в базу даних.",
         tags: ["Поштові індекси"],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["oblast", "settlement", "postal_code", "region", "post_branch", "post_office", "post_code_office"],
-                properties: [
-                    new OA\Property(property: "oblast", type: "string", example: "Вінницька"),
-                    new OA\Property(property: "old_district", type: "string", example: "Вінницький"),
-                    new OA\Property(property: "new_district", type: "string", example: "Вінницький"),
-                    new OA\Property(property: "settlement", type: "string", example: "Вінниця"),
-                    new OA\Property(property: "postal_code", type: "string", example: "21004"),
-                    new OA\Property(property: "region", type: "string", example: "Центральний"),
-                    new OA\Property(property: "district_new", type: "string", example: "Вінницький район"),
-                    new OA\Property(property: "settlement_eng", type: "string", example: "Vinnytsia"),
-                    new OA\Property(property: "post_branch", type: "string", example: "Відділення №4"),
-                    new OA\Property(property: "post_office", type: "string", example: "Відділення №4"),
-                    new OA\Property(property: "post_code_office", type: "string", example: "21004-4")
+                type: "array",
+                items: new OA\Items(
+                    required: ["oblast", "settlement", "postal_code", "region", "post_branch", "post_office", "post_code_office"],
+                    properties: [
+                        new OA\Property(property: "oblast", type: "string", example: "Вінницька"),
+                        new OA\Property(property: "old_district", type: "string", example: "Вінницький"),
+                        new OA\Property(property: "new_district", type: "string", example: "Вінницький"),
+                        new OA\Property(property: "settlement", type: "string", example: "Вінниця"),
+                        new OA\Property(property: "postal_code", type: "string", example: "21004"),
+                        new OA\Property(property: "region", type: "string", example: "Центральний"),
+                        new OA\Property(property: "district_new", type: "string", example: "Вінницький район"),
+                        new OA\Property(property: "settlement_eng", type: "string", example: "Vinnytsia"),
+                        new OA\Property(property: "post_branch", type: "string", example: "Відділення №4"),
+                        new OA\Property(property: "post_office", type: "string", example: "Відділення №4"),
+                        new OA\Property(property: "post_code_office", type: "string", example: "21004-4")
+                    ]
+                ),
+                example: [
+                    [
+                        "oblast" => "Вінницька",
+                        "old_district" => "Вінницький",
+                        "new_district" => "Вінницький",
+                        "settlement" => "Вінниця",
+                        "postal_code" => "21004",
+                        "region" => "Центральний",
+                        "district_new" => "Вінницький район",
+                        "settlement_eng" => "Vinnytsia",
+                        "post_branch" => "Відділення №4",
+                        "post_office" => "Відділення №4",
+                        "post_code_office" => "21004-4"
+                    ],
+                    [
+                        "oblast" => "Київська",
+                        "old_district" => "Києво-Святошинський",
+                        "new_district" => "Бучанський",
+                        "settlement" => "Буча",
+                        "postal_code" => "08292",
+                        "region" => "Північний",
+                        "district_new" => "Бучанський район",
+                        "settlement_eng" => "Bucha",
+                        "post_branch" => "Відділення №1",
+                        "post_office" => "Відділення №1",
+                        "post_code_office" => "08292-1"
+                    ]
                 ]
             )
         ),
         responses: [
             new OA\Response(response: 201, description: "Успішно додано"),
             new OA\Response(response: 400, description: "Невірний запит"),
+            new OA\Response(response: 409, description: "Помилка: поштовий індекс вже існує"),
             new OA\Response(response: 500, description: "Помилка сервера")
         ]
     )]
+
 
     public function addPostIndex(Request $request, Response $response): Response
     {
         $data = json_decode($request->getBody(), true);
 
-        $requiredFields = ['oblast', 'settlement', 'postal_code', 'region', 'post_branch', 'post_office', 'post_code_office'];
-        foreach ($requiredFields as $field) {
-            if (empty($data[$field])) {
-                $response->getBody()->write(json_encode(['error' => "Field '$field' is required"]));
-                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
-            }
-        }
-
-        // Додамо значення за замовчуванням для необов'язкових полів
-        $optionalFields = ['old_district', 'new_district', 'district_new', 'settlement_eng'];
-        foreach ($optionalFields as $field) {
-            if (!isset($data[$field])) {
-                $data[$field] = null; // Встановлення NULL для відсутніх необов'язкових полів
-            }
-        }
-
-        $sql = "INSERT INTO post_indexes (oblast, old_district, new_district, settlement, postal_code, region, district_new, settlement_eng, post_branch, post_office, post_code_office, manual_entry) 
-            VALUES (:oblast, :old_district, :new_district, :settlement, :postal_code, :region, :district_new, :settlement_eng, :post_branch, :post_office, :post_code_office, 1)";
-
-        $stmt = $this->pdo->prepare($sql);
-
-        foreach ($data as $key => $value) {
-            $stmt->bindValue(':' . $key, $value, $value !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
-        }
-
-        if ($stmt->execute()) {
-            $response->getBody()->write(json_encode(['message' => 'Post index added successfully']));
-            return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
+        if (isset($data[0]) && is_array($data[0])) {
+            $records = $data;
         } else {
-            $response->getBody()->write(json_encode(['error' => 'Failed to add post index']));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+            $records = [$data];
         }
+
+        $requiredFields = ['oblast', 'settlement', 'postal_code', 'region', 'post_branch', 'post_office', 'post_code_office'];
+        $optionalFields = ['old_district', 'new_district', 'district_new', 'settlement_eng'];
+
+        $checkSql = "SELECT COUNT(*) FROM post_indexes WHERE postal_code = :postal_code";
+        $insertSql = "INSERT INTO post_indexes (oblast, old_district, new_district, settlement, postal_code, region, district_new, settlement_eng, post_branch, post_office, post_code_office, manual_entry) 
+                      VALUES (:oblast, :old_district, :new_district, :settlement, :postal_code, :region, :district_new, :settlement_eng, :post_branch, :post_office, :post_code_office, 1)";
+
+        $checkStmt = $this->pdo->prepare($checkSql);
+        $insertStmt = $this->pdo->prepare($insertSql);
+        $inserted = 0;
+
+        foreach ($records as $record) {
+            foreach ($requiredFields as $field) {
+                if (empty($record[$field])) {
+                    $response->getBody()->write(json_encode(['error' => "Поле '$field' є обов'язковим"]));
+                    return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+                }
+            }
+
+            foreach ($optionalFields as $field) {
+                if (!isset($record[$field])) {
+                    $record[$field] = null;
+                }
+            }
+
+            $checkStmt->bindValue(':postal_code', $record['postal_code'], PDO::PARAM_STR);
+            $checkStmt->execute();
+            $exists = $checkStmt->fetchColumn();
+
+            if ($exists) {
+                $response->getBody()->write(json_encode(['error' => "Поштовий індекс '{$record['postal_code']}' вже існує"]));
+                return $response->withStatus(409)->withHeader('Content-Type', 'application/json');
+            }
+
+            foreach ($record as $key => $value) {
+                $insertStmt->bindValue(':' . $key, $value, $value !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+            }
+
+            if ($insertStmt->execute()) {
+                $inserted++;
+            }
+        }
+
+        $response->getBody()->write(json_encode(['message' => "$inserted поштових індексів успішно додано"]));
+        return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
     }
+
+
 
     /**
      * Видалення поштового індексу
