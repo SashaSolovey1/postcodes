@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7d2ecc1b-514b-47c5-bf1c-3a0f7b54c700" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/public/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/public/index.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/swagger/swagger.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Controllers/PostIndexController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controllers/PostIndexController.php" afterDir="false" />
-    </list>
+    <list default="true" id="7d2ecc1b-514b-47c5-bf1c-3a0f7b54c700" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -116,7 +112,7 @@
       <workItem from="1740589416621" duration="7304000" />
       <workItem from="1740661112208" duration="2059000" />
       <workItem from="1740663362425" duration="34438000" />
-      <workItem from="1740836322700" duration="3035000" />
+      <workItem from="1740836322700" duration="3890000" />
     </task>
     <servers />
   </component>

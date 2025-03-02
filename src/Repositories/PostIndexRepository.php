@@ -69,4 +69,62 @@ class PostIndexRepository
             AND postal_code NOT IN (SELECT postal_code FROM post_indexes_tmp)";
         return $this->pdo->exec($sql);
     }
+
+    public function addPostIndexes(array $records): int
+    {
+        $requiredFields = ['oblast', 'settlement', 'postal_code', 'region', 'post_branch', 'post_office', 'post_code_office'];
+        $optionalFields = ['old_district', 'new_district', 'district_new', 'settlement_eng'];
+
+        $checkSql = "SELECT COUNT(*) FROM post_indexes WHERE postal_code = :postal_code";
+        $insertSql = "INSERT INTO post_indexes 
+                      (oblast, old_district, new_district, settlement, postal_code, region, district_new, settlement_eng, post_branch, post_office, post_code_office, manual_entry) 
+                      VALUES (:oblast, :old_district, :new_district, :settlement, :postal_code, :region, :district_new, :settlement_eng, :post_branch, :post_office, :post_code_office, 1)";
+
+        $checkStmt = $this->pdo->prepare($checkSql);
+        $insertStmt = $this->pdo->prepare($insertSql);
+
+        $inserted = 0;
+
+        foreach ($records as $record) {
+            foreach ($requiredFields as $field) {
+                if (empty($record[$field])) {
+                    throw new InvalidArgumentException("Поле '$field' є обов'язковим.");
+                }
+            }
+
+            foreach ($optionalFields as $field) {
+                if (!isset($record[$field])) {
+                    $record[$field] = null;
+                }
+            }
+
+            $checkStmt->bindValue(':postal_code', $record['postal_code'], PDO::PARAM_STR);
+            $checkStmt->execute();
+            $exists = $checkStmt->fetchColumn();
+
+            if ($exists) {
+                continue;
+            }
+
+            foreach ($record as $key => $value) {
+                $insertStmt->bindValue(':' . $key, $value, $value !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+            }
+
+            if ($insertStmt->execute()) {
+                $inserted++;
+            }
+        }
+
+        return $inserted;
+    }
+
+    public function deletePostIndex(string $postalCode): bool
+    {
+        $sql = "DELETE FROM post_indexes WHERE postal_code = :postal_code";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':postal_code', $postalCode, PDO::PARAM_STR);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
+    }
 }

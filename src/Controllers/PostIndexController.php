@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Repositories\PostIndexRepository;
 use App\Services\PostIndexService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -26,10 +27,12 @@ use OpenApi\Attributes as OA;
 class PostIndexController
 {
     private PDO $pdo;
+    private PostIndexRepository $repository;
 
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
+        $this->repository = new PostIndexRepository($this->pdo);
     }
 
     /**
@@ -149,54 +152,24 @@ class PostIndexController
             $records = [$data];
         }
 
-        $requiredFields = ['oblast', 'settlement', 'postal_code', 'region', 'post_branch', 'post_office', 'post_code_office'];
-        $optionalFields = ['old_district', 'new_district', 'district_new', 'settlement_eng'];
+        try {
+            $inserted = $this->repository->addPostIndexes($records);
 
-        $checkSql = "SELECT COUNT(*) FROM post_indexes WHERE postal_code = :postal_code";
-        $insertSql = "INSERT INTO post_indexes (oblast, old_district, new_district, settlement, postal_code, region, district_new, settlement_eng, post_branch, post_office, post_code_office, manual_entry) 
-                      VALUES (:oblast, :old_district, :new_district, :settlement, :postal_code, :region, :district_new, :settlement_eng, :post_branch, :post_office, :post_code_office, 1)";
-
-        $checkStmt = $this->pdo->prepare($checkSql);
-        $insertStmt = $this->pdo->prepare($insertSql);
-        $inserted = 0;
-
-        foreach ($records as $record) {
-            foreach ($requiredFields as $field) {
-                if (empty($record[$field])) {
-                    $response->getBody()->write(json_encode(['error' => "Поле '$field' є обов'язковим"]));
-                    return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
-                }
-            }
-
-            foreach ($optionalFields as $field) {
-                if (!isset($record[$field])) {
-                    $record[$field] = null;
-                }
-            }
-
-            $checkStmt->bindValue(':postal_code', $record['postal_code'], PDO::PARAM_STR);
-            $checkStmt->execute();
-            $exists = $checkStmt->fetchColumn();
-
-            if ($exists) {
-                $response->getBody()->write(json_encode(['error' => "Поштовий індекс '{$record['postal_code']}' вже існує"]));
+            if ($inserted === 0) {
+                $response->getBody()->write(json_encode(['message' => "Жоден запис не було додано, всі поштові індекси вже існують."]));
                 return $response->withStatus(409)->withHeader('Content-Type', 'application/json');
             }
 
-            foreach ($record as $key => $value) {
-                $insertStmt->bindValue(':' . $key, $value, $value !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
-            }
-
-            if ($insertStmt->execute()) {
-                $inserted++;
-            }
+            $response->getBody()->write(json_encode(['message' => "$inserted поштових індексів успішно додано."]));
+            return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
+        } catch (\InvalidArgumentException $e) {
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['error' => "Помилка сервера: " . $e->getMessage()]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
-
-        $response->getBody()->write(json_encode(['message' => "$inserted поштових індексів успішно додано"]));
-        return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
     }
-
-
 
     /**
      * Видалення поштового індексу
@@ -229,19 +202,14 @@ class PostIndexController
     )]
     public function deletePostIndex(Request $request, Response $response, array $args): Response
     {
-        $postCode = $args['postal_code'];
+        $postalCode = $args['postal_code'];
 
-        $sql = "DELETE FROM post_indexes WHERE postal_code = :postal_code";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->bindValue(':postal_code', $postCode, PDO::PARAM_STR);
-
-        if ($stmt->execute() && $stmt->rowCount() > 0) {
-            $response->getBody()->write(json_encode(['message' => 'Post index deleted successfully']));
+        if ($this->repository->deletePostIndex($postalCode)) {
+            $response->getBody()->write(json_encode(['message' => 'Поштовий індекс успішно видалено']));
             return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
         } else {
-            $response->getBody()->write(json_encode(['error' => 'Post index not found']));
+            $response->getBody()->write(json_encode(['error' => 'Поштовий індекс не знайдено']));
             return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
         }
     }
-
 }
