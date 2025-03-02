@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use InvalidArgumentException;
 use PDO;
 
 /**
@@ -70,6 +71,13 @@ class PostIndexRepository
         return $this->pdo->exec($sql);
     }
 
+    /**
+     * Додавання поштових індексів (одного або декількох)
+     *
+     * @param array $records Масив записів, що містять поштові індекси для додавання.
+     * @return int Кількість успішно доданих записів.
+     * @throws InvalidArgumentException Якщо відсутні обов'язкові поля у записі.
+     */
     public function addPostIndexes(array $records): int
     {
         $requiredFields = ['oblast', 'settlement', 'postal_code', 'region', 'post_branch', 'post_office', 'post_code_office'];
@@ -117,6 +125,13 @@ class PostIndexRepository
 
         return $inserted;
     }
+
+    /**
+     * Видалення поштового індексу
+     *
+     * @param string $postalCode Поштовий індекс, який потрібно видалити.
+     * @return bool Повертає true, якщо запис був успішно видалений, і false, якщо запису не існувало.
+     */
 
     public function deletePostIndex(string $postalCode): bool
     {
